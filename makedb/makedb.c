@@ -33,6 +33,8 @@
 
 #define PROGNAME "uproc-makedb"
 
+#define STRICTNESS_DEFAULT VERY
+
 void
 make_opts(struct ppopts *o, const char *progname)
 {
@@ -54,6 +56,10 @@ make_opts(struct ppopts *o, const char *progname)
     O('V', "libversion", "", "Print libuproc version/features and exit.");
     O('c', "calib",      "",
       "Re-calibrate existing database (SOURCEFILE will be ignored).");
+    O('s', "strictness", "N",
+      "Filtering strictness, possible values: %d (not), "
+      "%d (moderate) and %d (very). Default is %d.",
+      NOT, MODERATE, VERY, STRICTNESS_DEFAULT);
 #undef O
 }
 
@@ -103,6 +109,7 @@ main(int argc, char **argv)
          *infile,
          *outdir;
     bool calib_only = false;
+    int strictness = STRICTNESS_DEFAULT;
 
     enum nonopt_args
     {
@@ -127,6 +134,18 @@ main(int argc, char **argv)
             case 'c':
                 calib_only = true;
                 break;
+            case 's':
+                {
+                    int tmp = 42;
+                    (void) parse_int(optarg, &tmp);
+                    if (tmp != NOT && tmp != MODERATE && tmp != VERY) {
+                        fprintf(stderr, "-s argument must be %d, %d or %d\n",
+                                NOT, MODERATE, VERY);
+                        return EXIT_FAILURE;
+                    }
+                    strictness = tmp;
+                }
+
             case '?':
                 return EXIT_FAILURE;
         }
@@ -152,7 +171,7 @@ main(int argc, char **argv)
             return EXIT_FAILURE;
         }
         make_dir(outdir);
-        res = build_ecurves(infile, outdir, alphabet, idmap);
+        res = build_ecurves(infile, outdir, alphabet, idmap, strictness);
         if (res) {
             uproc_perror("error building ecurves");
             return EXIT_FAILURE;

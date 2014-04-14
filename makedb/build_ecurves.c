@@ -204,17 +204,24 @@ error:
 
 
 static size_t
-filter_singletons(struct ecurve_entry *entries, size_t n)
+filter_singletons(struct ecurve_entry *entries, size_t n, int strictness)
 {
     size_t i, k;
     unsigned char *types = calloc(n, sizeof *types);
     enum
     {
-        SINGLE,
-        CLUSTER,
-        BRIDGED,
-        CROSSOVER
+        CLUSTER= 1,
+        BRIDGED = 2,
+        CROSSOVER = 4,
+        SINGLE = 8,
     };
+    int mask = CLUSTER | BRIDGED;
+    if (strictness < VERY) {
+        mask |= CROSSOVER;
+    }
+    if (strictness < MODERATE) {
+        mask |= SINGLE;
+    }
 
     for (i = 0; i < n; i++) {
         struct ecurve_entry *e = &entries[i];
@@ -245,7 +252,7 @@ filter_singletons(struct ecurve_entry *entries, size_t n)
     }
 
     for (i = k = 0; i < n; i++) {
-        if (types[i] == CLUSTER || types[i] == BRIDGED) {
+        if (types[i] & mask) {
             entries[k] = entries[i];
             k++;
         }
@@ -303,7 +310,8 @@ build_ecurve(const char *infile,
              const char *alphabet,
              uproc_idmap *idmap,
              bool reverse,
-             uproc_ecurve **ecurve)
+             uproc_ecurve **ecurve,
+             int strictness)
 {
     int res;
     uproc_io_stream *stream;
@@ -339,7 +347,7 @@ build_ecurve(const char *infile,
             goto error;
         }
 
-        n_entries = filter_singletons(entries, n_entries);
+        n_entries = filter_singletons(entries, n_entries, strictness);
         if (!n_entries) {
             continue;
         }
@@ -367,11 +375,11 @@ error:
 
 static int
 build_and_store(const char *infile, const char *outdir, const char *alphabet,
-                uproc_idmap *idmap, bool reverse)
+                uproc_idmap *idmap, bool reverse, int strictness)
 {
     int res;
     uproc_ecurve *ecurve = NULL;
-    res = build_ecurve(infile, alphabet, idmap, reverse, &ecurve);
+    res = build_ecurve(infile, alphabet, idmap, reverse, &ecurve, strictness);
     if (res) {
         return res;
     }
@@ -387,13 +395,14 @@ int
 build_ecurves(const char *infile,
               const char *outdir,
               const char *alphabet,
-              uproc_idmap *idmap)
+              uproc_idmap *idmap,
+              int strictness)
 {
     int res;
-    res = build_and_store(infile, outdir, alphabet, idmap, false);
+    res = build_and_store(infile, outdir, alphabet, idmap, false, strictness);
     if (res) {
         return res;
     }
-    res = build_and_store(infile, outdir, alphabet, idmap, true);
+    res = build_and_store(infile, outdir, alphabet, idmap, true, strictness);
     return res;
 }
