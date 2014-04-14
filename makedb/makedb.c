@@ -145,6 +145,7 @@ main(int argc, char **argv)
                     }
                     strictness = tmp;
                 }
+                break;
 
             case '?':
                 return EXIT_FAILURE;
