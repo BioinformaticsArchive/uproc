@@ -207,7 +207,7 @@ static size_t
 filter_singletons(struct ecurve_entry *entries, size_t n, int strictness)
 {
     size_t i, k;
-    unsigned char *types = calloc(n, sizeof *types);
+    unsigned char types[n];
     enum
     {
         CLUSTER= 1,
@@ -221,6 +221,10 @@ filter_singletons(struct ecurve_entry *entries, size_t n, int strictness)
     }
     if (strictness < MODERATE) {
         mask |= SINGLE;
+    }
+
+    for (i = 0; i < n; i++) {
+        types[i] = SINGLE;
     }
 
     for (i = 0; i < n; i++) {
@@ -260,7 +264,6 @@ filter_singletons(struct ecurve_entry *entries, size_t n, int strictness)
             filtered_counts[entries[i].family] += 1;
         }
     }
-    free(types);
     return k;
 }
 
