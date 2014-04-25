@@ -29,7 +29,7 @@
 #include <ctype.h>
 
 #include <uproc.h>
-#include "ecurve_internal.h"
+#include "common.h"
 #include "makedb.h"
 
 unsigned long filtered_counts[UPROC_FAMILY_MAX] = { 0 };
@@ -264,7 +264,6 @@ filter_singletons(struct ecurve_entry *entries, size_t n, int strictness)
             filtered_counts[entries[i].family] += 1;
         }
     }
-    free(types);
     return k;
 }
 
@@ -334,7 +333,7 @@ build_ecurve(const char *infile,
         goto error;
     }
 
-    progress(reverse ? "rev.ecurve" : "fwd.ecurve", -1.0);
+    progress(uproc_stderr, reverse ? "rev.ecurve" : "fwd.ecurve", -1.0);
     for (first = 0; first < UPROC_ALPHABET_SIZE; first++) {
         n_entries = 0;
         free(entries);
@@ -343,7 +342,7 @@ build_ecurve(const char *infile,
             res = -1;
             goto error;
         }
-        progress(NULL, first * 100 / UPROC_ALPHABET_SIZE);
+        progress(uproc_stderr, NULL, first * 100 / UPROC_ALPHABET_SIZE);
         res = extract_uniques(stream, alpha, idmap, first, reverse,
                               &entries, &n_entries);
         uproc_io_close(stream);
@@ -362,7 +361,7 @@ build_ecurve(const char *infile,
         }
     }
     uproc_ecurve_finalize(*ecurve);
-    progress(NULL, first * 100 / UPROC_ALPHABET_SIZE);
+    progress(uproc_stderr, NULL, first * 100 / UPROC_ALPHABET_SIZE);
 
     if (0) {
 error:

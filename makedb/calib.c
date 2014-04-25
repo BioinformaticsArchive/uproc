@@ -34,6 +34,7 @@
 #endif
 
 #include <uproc.h>
+#include "common.h"
 #include "makedb.h"
 
 #define SEQ_COUNT_MULTIPLIER 200000
@@ -273,7 +274,7 @@ int calib(const char *alphabet, const char *dbdir, const char *modeldir)
 #endif
     double perc = 0.0;
     int power;
-    progress("calibrating", perc);
+    progress(uproc_stderr, "calibrating", perc);
 #pragma omp parallel private(res, power) shared(fwd, rev, substmat, alpha, aa_probs, perc)
     {
 #pragma omp for
@@ -299,7 +300,7 @@ int calib(const char *alphabet, const char *dbdir, const char *modeldir)
 #pragma omp critical
                     {
                         perc += 100.0 / (POW_MAX - POW_MIN + 1) / 100.0;
-                        progress(NULL, perc);
+                        progress(uproc_stderr, NULL, perc);
                     }
                 }
                 randseq(seq, seq_len, alpha, aa_probs);
@@ -317,7 +318,7 @@ int calib(const char *alphabet, const char *dbdir, const char *modeldir)
             uproc_list_destroy(results);
         }
     }
-    progress(NULL, 100.0);
+    progress(uproc_stderr, NULL, 100.0);
 
     res = store_interpolated(thresh2, dbdir, "prot_thresh_e2");
     if (!res) {
