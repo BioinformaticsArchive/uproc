@@ -321,12 +321,13 @@ create_classifiers(uproc_protclass **pc, uproc_dnaclass **dc,
     if (!*pc) {
         return -1;
     }
+
     if (!dc) {
         return 0;
     }
 
     *dc = uproc_dnaclass_create(dc_mode, *pc, model->codon_scores, orf_filter,
-                                model->orf_thresh);
+                                short_read_mode ? NULL : model->orf_thresh);
 
     if (!*dc) {
         uproc_protclass_destroy(*pc);
@@ -336,7 +337,7 @@ create_classifiers(uproc_protclass **pc, uproc_dnaclass **dc,
 }
 
 
-#if !defined(NDEBUG) && HAVE_CLOCK_GETTIME
+#if defined(TIMEIT) && HAVE_CLOCK_GETTIME
 void timeit_start(timeit *t)
 {
     if (t->running) {
